@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: todo_app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d todo_app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
