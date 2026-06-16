@@ -1,4 +1,5 @@
 services:
+  # Go Application
   app:
     build: .
     ports:
@@ -9,6 +10,7 @@ services:
       db:
         condition: service_healthy
 
+  # PostgreSQL Database
   db:
     image: postgres:latest
     environment:
@@ -16,9 +18,21 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: todo_app
     ports:
-      - "5433:5432"
+      - "5433:5432"  # host:container (5433 to avoid conflict with local postgres)
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U admin -d todo_app" ]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # pgAdmin - Database GUI (access at http://localhost:5051)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: gin-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5051:80"  # changed from 5050 to avoid conflict
+    depends_on:
+      - db
