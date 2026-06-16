@@ -15,8 +15,10 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: todo_app
+    ports:
+      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d todo_app"]
+      test: [ "CMD-SHELL", "pg_isready -U admin -d todo_app" ]
       interval: 5s
       timeout: 5s
       retries: 5
