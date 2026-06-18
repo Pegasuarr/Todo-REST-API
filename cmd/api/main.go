@@ -5,6 +5,7 @@ import (
 	"Todo_App/internal/database"
 	"log"
 
+	"Todo_App/internal/handlers"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -35,6 +36,11 @@ func main() {
 			"database": "connected",
 		})
 	})
-	router.Run(":" + cfg.Port)
+
+	router.POST("/todos", handlers.CreateTodoHandler(pool))
+
+	if err := router.Run(":" + cfg.Port); err != nil {
+	log.Fatal("Failed to start server:", err)
+}
 
 }
