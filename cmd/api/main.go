@@ -29,11 +29,17 @@ func main() {
 
 	var router *gin.Engine = gin.Default()
 
-	// Enable CORS for frontend flexibility
+	// Enable CORS for API flexibility
 	router.Use(middleware.CORSMiddleware())
 
-	// Serve the premium frontend SPA
-	router.StaticFile("/", "./web/index.html")
+	// Root healthcheck endpoint
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message":  "Todo API is running!!!!",
+			"status":   "success",
+			"database": "connected",
+		})
+	})
 
 	// Todo REST API endpoints
 	router.GET("/todos", handlers.GetTodosHandler(pool))
