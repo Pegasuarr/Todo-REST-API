@@ -1,1 +1,1 @@
-drop table todos_user;
+drop table todos;

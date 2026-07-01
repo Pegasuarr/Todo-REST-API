@@ -9,6 +9,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   # PostgreSQL Database
   db:
@@ -36,3 +38,13 @@ services:
       - "5051:80"  # changed from 5050 to avoid conflict
     depends_on:
       - db
+
+  # Database Migrations runner
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    command: -path=/migrations -database=postgres://admin:admin@db:5432/todo_app?sslmode=disable up
+    depends_on:
+      db:
+        condition: service_healthy

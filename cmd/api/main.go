@@ -3,9 +3,10 @@ package main
 import (
 	"Todo_App/internal/config"
 	"Todo_App/internal/database"
+	"Todo_App/internal/handlers"
+	"Todo_App/internal/middleware"
 	"log"
 
-	"Todo_App/internal/handlers"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -27,20 +28,22 @@ func main() {
 	defer pool.Close()
 
 	var router *gin.Engine = gin.Default()
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			//map [string] of interface
-			//map [string] any {}
-			"message":  "Todo API is running!!!!",
-			"status":   "success",
-			"database": "connected",
-		})
-	})
 
+	// Enable CORS for frontend flexibility
+	router.Use(middleware.CORSMiddleware())
+
+	// Serve the premium frontend SPA
+	router.StaticFile("/", "./web/index.html")
+
+	// Todo REST API endpoints
+	router.GET("/todos", handlers.GetTodosHandler(pool))
 	router.POST("/todos", handlers.CreateTodoHandler(pool))
+	router.GET("/todos/:id", handlers.GetTodoByIDHandler(pool))
+	router.PUT("/todos/:id", handlers.UpdateTodoHandler(pool))
+	router.DELETE("/todos/:id", handlers.DeleteTodoHandler(pool))
 
+	log.Println("Starting server on port " + cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
-	log.Fatal("Failed to start server:", err)
-}
-
+		log.Fatal("Failed to start server:", err)
+	}
 }

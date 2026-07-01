@@ -1,4 +1,4 @@
-create table if not exists todos_user (
+create table if not exists todos (
      id serial primary key,
      title varchar(255) not null,
     completed boolean default false,
