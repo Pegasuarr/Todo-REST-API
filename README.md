@@ -4,11 +4,35 @@ A secure, multi-user Todo REST API built in Go using the **Gin** web framework, 
 
 ---
 
-## Architecture Flow
+## Microservices Architecture
 
-The diagram below visualizes the user authentication cycle and how requests are processed through the authentication middleware to enforce user data isolation.
+The diagram below visualizes the containerized services deployment and how the Go REST API application, PostgreSQL database, migrations container, and pgAdmin GUI connect together inside Docker Compose.
 
-![JWT Authentication Flow](docs/jwt_auth_flow.png)
+```mermaid
+flowchart TD
+    classDef client fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    classDef app fill:#a855f7,stroke:#6b21a8,color:#fff
+    classDef database fill:#10b981,stroke:#047857,color:#fff
+    classDef migration fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef admin fill:#6b7280,stroke:#374151,color:#fff
+
+    subgraph Docker_Compose_Environment [Docker Compose Network]
+        App[Go App Container<br>Port 8081]:::app
+        DB[(PostgreSQL DB Container<br>Port 5432)]:::database
+        Migrate[Migrate Container<br>golang-migrate]:::migration
+        pgAdmin[pgAdmin Container<br>Port 80]:::admin
+    end
+
+    Client[Client / Browser]:::client -->|REST API Requests: port 8081| App
+    Client -->|DB Management: port 5051| pgAdmin
+
+    App -->|Connects & Queries| DB
+    Migrate -->|Applies Schema Updates| DB
+    pgAdmin -->|Manages| DB
+
+    App -.->|Depends on Success| Migrate
+    Migrate -.->|Depends on Healthy| DB
+```
 
 ---
 
