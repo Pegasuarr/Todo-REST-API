@@ -12,19 +12,20 @@ import (
 
 var ErrNotFound = errors.New("todo not found")
 
-func CreateTodo(pool *pgxpool.Pool, title string, completed bool) (*models.Todo, error) {
+func CreateTodo(pool *pgxpool.Pool, title string, completed bool, userID int) (*models.Todo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `INSERT INTO todos (title, completed)
-		VALUES ($1, $2)
-		RETURNING id, title, completed, created_at, updated_at`
+	query := `INSERT INTO todos (title, completed, user_id)
+		VALUES ($1, $2, $3)
+		RETURNING id, title, completed, user_id, created_at, updated_at`
 
 	var todo models.Todo
-	err := pool.QueryRow(ctx, query, title, completed).Scan(
+	err := pool.QueryRow(ctx, query, title, completed, userID).Scan(
 		&todo.ID,
 		&todo.Title,
 		&todo.Completed,
+		&todo.UserID,
 		&todo.CreatedAt,
 		&todo.UpdatedAt,
 	)
@@ -35,12 +36,12 @@ func CreateTodo(pool *pgxpool.Pool, title string, completed bool) (*models.Todo,
 	return &todo, nil
 }
 
-func GetTodos(pool *pgxpool.Pool) ([]models.Todo, error) {
+func GetTodos(pool *pgxpool.Pool, userID int) ([]models.Todo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `SELECT id, title, completed, created_at, updated_at FROM todos ORDER BY id ASC`
-	rows, err := pool.Query(ctx, query)
+	query := `SELECT id, title, completed, user_id, created_at, updated_at FROM todos WHERE user_id = $1 ORDER BY id ASC`
+	rows, err := pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +54,7 @@ func GetTodos(pool *pgxpool.Pool) ([]models.Todo, error) {
 			&todo.ID,
 			&todo.Title,
 			&todo.Completed,
+			&todo.UserID,
 			&todo.CreatedAt,
 			&todo.UpdatedAt,
 		)
@@ -69,16 +71,17 @@ func GetTodos(pool *pgxpool.Pool) ([]models.Todo, error) {
 	return todos, nil
 }
 
-func GetTodoByID(pool *pgxpool.Pool, id int) (*models.Todo, error) {
+func GetTodoByID(pool *pgxpool.Pool, id int, userID int) (*models.Todo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `SELECT id, title, completed, created_at, updated_at FROM todos WHERE id = $1`
+	query := `SELECT id, title, completed, user_id, created_at, updated_at FROM todos WHERE id = $1 AND user_id = $2`
 	var todo models.Todo
-	err := pool.QueryRow(ctx, query, id).Scan(
+	err := pool.QueryRow(ctx, query, id, userID).Scan(
 		&todo.ID,
 		&todo.Title,
 		&todo.Completed,
+		&todo.UserID,
 		&todo.CreatedAt,
 		&todo.UpdatedAt,
 	)
@@ -92,20 +95,21 @@ func GetTodoByID(pool *pgxpool.Pool, id int) (*models.Todo, error) {
 	return &todo, nil
 }
 
-func UpdateTodo(pool *pgxpool.Pool, id int, title string, completed bool) (*models.Todo, error) {
+func UpdateTodo(pool *pgxpool.Pool, id int, title string, completed bool, userID int) (*models.Todo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	query := `UPDATE todos 
 		SET title = $1, completed = $2, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $3
-		RETURNING id, title, completed, created_at, updated_at`
+		WHERE id = $3 AND user_id = $4
+		RETURNING id, title, completed, user_id, created_at, updated_at`
 
 	var todo models.Todo
-	err := pool.QueryRow(ctx, query, title, completed, id).Scan(
+	err := pool.QueryRow(ctx, query, title, completed, id, userID).Scan(
 		&todo.ID,
 		&todo.Title,
 		&todo.Completed,
+		&todo.UserID,
 		&todo.CreatedAt,
 		&todo.UpdatedAt,
 	)
@@ -119,12 +123,12 @@ func UpdateTodo(pool *pgxpool.Pool, id int, title string, completed bool) (*mode
 	return &todo, nil
 }
 
-func DeleteTodo(pool *pgxpool.Pool, id int) error {
+func DeleteTodo(pool *pgxpool.Pool, id int, userID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `DELETE FROM todos WHERE id = $1`
-	commandTag, err := pool.Exec(ctx, query, id)
+	query := `DELETE FROM todos WHERE id = $1 AND user_id = $2`
+	commandTag, err := pool.Exec(ctx, query, id, userID)
 	if err != nil {
 		return err
 	}

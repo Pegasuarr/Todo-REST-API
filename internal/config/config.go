@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Db   string `yaml:"db"`
-	Port string `yaml:"port"`
+	Db        string `yaml:"db"`
+	Port      string `yaml:"port"`
+	JwtSecret string `yaml:"jwt_secret"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -19,8 +20,9 @@ func LoadConfig() (*Config, error) {
 	}
 
 	var config *Config = &Config{
-		Db:   os.Getenv("DB_URL"),
-		Port: os.Getenv("PORT"),
+		Db:        os.Getenv("DB_URL"),
+		Port:      os.Getenv("PORT"),
+		JwtSecret: os.Getenv("JWT_SECRET"),
 	}
 	return config, nil
 }

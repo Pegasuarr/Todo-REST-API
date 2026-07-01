@@ -41,12 +41,20 @@ func main() {
 		})
 	})
 
-	// Todo REST API endpoints
-	router.GET("/todos", handlers.GetTodosHandler(pool))
-	router.POST("/todos", handlers.CreateTodoHandler(pool))
-	router.GET("/todos/:id", handlers.GetTodoByIDHandler(pool))
-	router.PUT("/todos/:id", handlers.UpdateTodoHandler(pool))
-	router.DELETE("/todos/:id", handlers.DeleteTodoHandler(pool))
+	// Auth routes (Public)
+	router.POST("/register", handlers.RegisterHandler(pool))
+	router.POST("/login", handlers.LoginHandler(pool, cfg.JwtSecret))
+
+	// Secured routes (Requires Auth)
+	authorized := router.Group("/")
+	authorized.Use(middleware.AuthMiddleware(cfg.JwtSecret))
+	{
+		authorized.GET("/todos", handlers.GetTodosHandler(pool))
+		authorized.POST("/todos", handlers.CreateTodoHandler(pool))
+		authorized.GET("/todos/:id", handlers.GetTodoByIDHandler(pool))
+		authorized.PUT("/todos/:id", handlers.UpdateTodoHandler(pool))
+		authorized.DELETE("/todos/:id", handlers.DeleteTodoHandler(pool))
+	}
 
 	log.Println("Starting server on port " + cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
