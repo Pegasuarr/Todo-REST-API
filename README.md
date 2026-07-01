@@ -6,30 +6,9 @@ A secure, multi-user Todo REST API built in Go using the **Gin** web framework, 
 
 ## Architecture Flow
 
-The flowchart below visualizes the user authentication cycle and how requests are processed through the authentication middleware to enforce user data isolation.
+The diagram below visualizes the user authentication cycle and how requests are processed through the authentication middleware to enforce user data isolation.
 
-```mermaid
-flowchart TD
-    classDef public fill:#3b82f6,stroke:#1d4ed8,color:#fff
-    classDef secure fill:#a855f7,stroke:#6b21a8,color:#fff
-    classDef database fill:#10b981,stroke:#047857,color:#fff
-    classDef error fill:#ef4444,stroke:#b91c1c,color:#fff
-
-    Client[Client] -->|1. Register: POST /register| RegHandler[Register Handler]:::public
-    Client -->|2. Login: POST /login| LoginHandler[Login Handler]:::public
-    
-    RegHandler -->|Create User| DB[(PostgreSQL Database)]:::database
-    LoginHandler -->|Verify Password & Issue JWT| Client
-    
-    Client -->|3. Request /todos with JWT| Middleware{Auth Middleware}:::secure
-    
-    Middleware -->|Missing / Invalid Token| Unauth[401 Unauthorized]:::error
-    Middleware -->|Valid: Extract user_id| TodoHandlers[Todo Handlers]:::secure
-    
-    TodoHandlers -->|CRUD Query with user_id| DB
-    DB -->|Isolated Data Result| TodoHandlers
-    TodoHandlers -->|Return JSON| Client
-```
+![JWT Authentication Flow](docs/jwt_auth_flow.png)
 
 ---
 
